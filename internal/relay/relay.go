@@ -136,7 +136,7 @@ func (r *Relay) sendReleaseEvents() {
 	}
 
 	// For mouse: clear all buttons and movement
-	mouseRelease := []byte{0, 0, 0, 0}
+	mouseRelease := []byte{0, 0, 0, 0, 0}
 	if f, err := os.OpenFile(r.config.MouseOutput, os.O_WRONLY, 0666); err == nil {
 		for i := 0; i < 3; i++ {
 			f.Write(mouseRelease)

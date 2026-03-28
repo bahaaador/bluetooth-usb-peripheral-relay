@@ -70,10 +70,10 @@ func TestMoveMouseInCircle(t *testing.T) {
 	// Verify writes
 	got := mock.Bytes()
 	expected := []byte{
-		0, 40, 0, 0, // Right
-		0, 0, 40, 0, // Down
-		0, 216, 0, 0, // Left
-		0, 0, 216, 0, // Up
+		0, 40, 0, 0, 0, // Right
+		0, 0, 40, 0, 0, // Down
+		0, 216, 0, 0, 0, // Left
+		0, 0, 216, 0, 0, // Up
 	}
 
 	if !bytes.Equal(got, expected) {

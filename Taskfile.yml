@@ -101,10 +101,10 @@ tasks:
       - echo "Uninstalling {{.BINARY_NAME}} service..."
       - systemctl stop {{.BINARY_NAME}}.service || true
       - systemctl disable {{.BINARY_NAME}}.service || true
+      - systemctl reset-failed {{.BINARY_NAME}}.service || true
       - rm -f {{.SERVICE_PATH}}/{{.SERVICE_NAME}}
       - rm -f {{.INSTALL_PATH}}/{{.BINARY_NAME}}
       - systemctl daemon-reload
-      - systemctl reset-failed {{.BINARY_NAME}}.service || true
     requires:
       root: true
 

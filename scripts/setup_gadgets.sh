@@ -104,8 +104,62 @@ echo 250 > configs/c.1/MaxPower
 mkdir -p functions/hid.usb0
 echo 0 > functions/hid.usb0/protocol
 echo 0 > functions/hid.usb0/subclass
-echo 4 > functions/hid.usb0/report_length
-echo -ne \\x05\\x01\\x09\\x02\\xa1\\x01\\x09\\x01\\xa1\\x00\\x05\\x09\\x19\\x01\\x29\\x03\\x15\\x00\\x25\\x01\\x95\\x03\\x75\\x01\\x81\\x02\\x95\\x01\\x75\\x05\\x81\\x03\\x05\\x01\\x09\\x30\\x09\\x31\\x09\\x38\\x15\\x81\\x25\\x7f\\x75\\x08\\x95\\x03\\x81\\x06\\xc0\\xc0 > functions/hid.usb0/report_desc
+echo 5 > functions/hid.usb0/report_length
+# Mouse HID descriptor: 5 buttons, X/Y, vertical wheel, horizontal wheel (AC Pan)
+# Report format (5 bytes): [buttons(5bits+3pad)] [X] [Y] [wheel] [h-wheel]
+# Structure: Physical Collection contains only buttons + X/Y (pointer data).
+# Wheel and AC Pan are outside Physical but inside Application Collection,
+# each with explicit Logical Min/Max and Report Size for host compatibility.
+# Note: We use python3 instead of echo -ne because the AC Pan usage (0x0238)
+# requires a 2-byte HID Usage item header (0x0A), which is also the newline
+# character. echo -ne splits output on 0x0A, causing configfs to receive
+# truncated descriptor data.
+python3 -c "
+import sys
+desc = bytes([
+    0x05, 0x01,        # Usage Page (Generic Desktop)
+    0x09, 0x02,        # Usage (Mouse)
+    0xA1, 0x01,        # Collection (Application)
+    0x09, 0x01,        #   Usage (Pointer)
+    0xA1, 0x00,        #   Collection (Physical)
+    0x05, 0x09,        #     Usage Page (Button)
+    0x19, 0x01,        #     Usage Minimum (1)
+    0x29, 0x05,        #     Usage Maximum (5)
+    0x15, 0x00,        #     Logical Minimum (0)
+    0x25, 0x01,        #     Logical Maximum (1)
+    0x95, 0x05,        #     Report Count (5)
+    0x75, 0x01,        #     Report Size (1)
+    0x81, 0x02,        #     Input (Data, Var, Abs) - 5 button bits
+    0x95, 0x01,        #     Report Count (1)
+    0x75, 0x03,        #     Report Size (3)
+    0x81, 0x03,        #     Input (Const, Var, Abs) - 3 padding bits
+    0x05, 0x01,        #     Usage Page (Generic Desktop)
+    0x09, 0x30,        #     Usage (X)
+    0x09, 0x31,        #     Usage (Y)
+    0x15, 0x81,        #     Logical Minimum (-127)
+    0x25, 0x7F,        #     Logical Maximum (127)
+    0x75, 0x08,        #     Report Size (8)
+    0x95, 0x02,        #     Report Count (2)
+    0x81, 0x06,        #     Input (Data, Var, Rel) - X, Y
+    0xC0,              #   End Collection (Physical)
+    0x09, 0x38,        #   Usage (Wheel)
+    0x15, 0x81,        #   Logical Minimum (-127)
+    0x25, 0x7F,        #   Logical Maximum (127)
+    0x75, 0x08,        #   Report Size (8)
+    0x95, 0x01,        #   Report Count (1)
+    0x81, 0x06,        #   Input (Data, Var, Rel) - Wheel
+    0x05, 0x0C,        #   Usage Page (Consumer)
+    0x0A, 0x38, 0x02,  #   Usage (AC Pan = 0x0238)
+    0x15, 0x81,        #   Logical Minimum (-127)
+    0x25, 0x7F,        #   Logical Maximum (127)
+    0x75, 0x08,        #   Report Size (8)
+    0x95, 0x01,        #   Report Count (1)
+    0x81, 0x06,        #   Input (Data, Var, Rel) - Horizontal wheel
+    0xC0,              # End Collection (Application)
+])
+with open('functions/hid.usb0/report_desc', 'wb') as f:
+    f.write(desc)
+"
 
 # Set up Keyboard HID function
 mkdir -p functions/hid.usb1

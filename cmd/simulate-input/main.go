@@ -65,20 +65,20 @@ func moveMouseInCircle() {
 
 	fmt.Println("Moving mouse in a circle...")
 
-	report := []byte{0, 40, 0, 0} // Move right
+	report := []byte{0, 40, 0, 0, 0} // Move right
 	f.Write(report)
 	time.Sleep(delay)
 
-	report = []byte{0, 0, 40, 0} // Move down
+	report = []byte{0, 0, 40, 0, 0} // Move down
 	f.Write(report)
 	time.Sleep(delay)
 
-	report = []byte{0, 216, 0, 0} // Move left  (-40 as byte = 256-40 = 216)
+	report = []byte{0, 216, 0, 0, 0} // Move left  (-40 as byte = 256-40 = 216)
 	f.Write(report)
 	time.Sleep(delay)
 
 	// Move up
-	report = []byte{0, 0, 216, 0} // Move up    (-40 as byte = 256-40 = 216)
+	report = []byte{0, 0, 216, 0, 0} // Move up    (-40 as byte = 256-40 = 216)
 	f.Write(report)
 }
 

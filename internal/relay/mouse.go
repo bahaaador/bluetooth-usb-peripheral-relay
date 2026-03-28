@@ -9,14 +9,22 @@ type MouseRelay struct {
 }
 
 func (m *MouseRelay) convertEvent(event InputEvent) ([]byte, error) {
-	var report [4]byte
+	var report [5]byte
 
 	logger.DebugPrintf("Mouse event: type=%d, code=%d, value=%d, time=%v", event.Type, event.Code, event.Value, event.Time)
 
 	switch event.Type {
 	case 1: // EV_KEY
-		if event.Code >= 272 && event.Code <= 276 {
-			buttonBit := event.Code - 272 // Convert to 0-based index
+		if event.Code >= 272 && event.Code <= 278 {
+			buttonBit := event.Code - 272
+
+			// BTN_FORWARD (277) and BTN_BACK (278) map to same HID buttons
+			// as BTN_EXTRA (276, bit 4) and BTN_SIDE (275, bit 3)
+			if event.Code == 277 {
+				buttonBit = 4 // Forward → Button 5
+			} else if event.Code == 278 {
+				buttonBit = 3 // Back → Button 4
+			}
 
 			if event.Value == 1 { // Button press
 				m.lastState |= 1 << buttonBit
@@ -29,12 +37,14 @@ func (m *MouseRelay) convertEvent(event InputEvent) ([]byte, error) {
 	case 2: // EV_REL
 		report[0] = m.lastState
 		switch event.Code {
-		case 0: // X axis
+		case 0: // REL_X
 			report[1] = byte(event.Value)
-		case 1: // Y axis
+		case 1: // REL_Y
 			report[2] = byte(event.Value)
-		case 8: // Wheel
+		case 8: // REL_WHEEL (vertical)
 			report[3] = byte(event.Value)
+		case 6: // REL_HWHEEL (horizontal)
+			report[4] = byte(event.Value)
 		}
 		return report[:], nil
 	}
@@ -49,7 +59,7 @@ func (m *MouseRelay) validateEvent(event InputEvent) bool {
 	case 0: // EV_SYN
 		return false
 	case 1: // EV_KEY
-		return event.Code >= 272 && event.Code <= 276
+		return event.Code >= 272 && event.Code <= 278
 	case 2: // EV_REL
 		return event.Code <= 8
 	case 4: // EV_MSC

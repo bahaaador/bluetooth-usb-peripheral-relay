@@ -12,39 +12,39 @@ type KeyboardRelay struct {
 // Linux event code to HID usage ID mapping
 var keyCodeMap = generateKeyCodeMap()
 
+// Linux input event codes (from input-event-codes.h)
 const (
-	KEY_ESC = 1
-	KEY_1   = 2
-	KEY_2   = 3
-	// ... etc
-	KEY_A = 30
-	KEY_B = 48
-	KEY_C = 46
-	// ... etc
+	KEY_ESC        = 1
+	KEY_1          = 2
+	KEY_BACKSPACE  = 14
+	KEY_TAB        = 15
+	KEY_ENTER      = 28
 	KEY_LEFTCTRL   = 29
 	KEY_LEFTSHIFT  = 42
 	KEY_RIGHTSHIFT = 54
 	KEY_LEFTALT    = 56
-	KEY_LEFTMETA   = 125
-	KEY_RIGHTMETA  = 126
+	KEY_SPACE      = 57
+	KEY_CAPSLOCK   = 58
 	KEY_F1         = 59
-	KEY_BACKSPACE  = 14
-	KEY_TAB        = 15
-	KEY_ENTER      = 28
-	KEY_CAPSLOCK   = 57
-	KEY_SPACE      = 58
-	KEY_RIGHTCTRL  = 105
-	KEY_RIGHTALT   = 108
-	KEY_HOME       = 302
+	KEY_F11        = 87
+	KEY_F12        = 88
+	KEY_NUMLOCK    = 69
+	KEY_RIGHTCTRL  = 97
+	KEY_RIGHTALT   = 100
 	KEY_UP         = 103
-	KEY_PAGEUP     = 102
-	KEY_LEFT       = 100
-	KEY_RIGHT      = 104
-	KEY_END        = 301
+	KEY_PAGEUP     = 104
+	KEY_LEFT       = 105
+	KEY_RIGHT      = 106
+	KEY_END        = 107
 	KEY_DOWN       = 108
 	KEY_PAGEDOWN   = 109
-	KEY_INSERT     = 210
+	KEY_INSERT     = 110
 	KEY_DELETE     = 111
+	KEY_PAUSE      = 119
+	KEY_LEFTMETA   = 125
+	KEY_RIGHTMETA  = 126
+	KEY_MENU       = 127
+	KEY_HOME       = 102
 )
 
 func generateKeyCodeMap() map[uint16]byte {
@@ -126,22 +126,52 @@ func generateKeyCodeMap() map[uint16]byte {
 	m[12] = 0x2D // - (minus)
 	m[13] = 0x2E // = (equals)
 
-	// Function keys
-	for i := 0; i < 12; i++ {
-		m[uint16(59+i)] = byte(0x3A + i) // F1-F12
+	// Function keys F1-F10 (Linux codes 59-68)
+	for i := 0; i < 10; i++ {
+		m[uint16(59+i)] = byte(0x3A + i)
 	}
+	// F11, F12 (Linux codes 87, 88 — NOT sequential with F1-F10)
+	m[87] = 0x44 // F11
+	m[88] = 0x45 // F12
 
 	// Navigation cluster
 	m[102] = 0x4A // Home
-	m[107] = 0x4B // End
-	m[104] = 0x52 // Page Up
-	m[109] = 0x51 // Page Down
+	m[104] = 0x4B // Page Up
+	m[107] = 0x4D // End
+	m[109] = 0x4E // Page Down
 	m[110] = 0x49 // Insert
 	m[111] = 0x4C // Delete
+
+	// Arrow keys
 	m[103] = 0x52 // Up Arrow
 	m[108] = 0x51 // Down Arrow
 	m[105] = 0x50 // Left Arrow
 	m[106] = 0x4F // Right Arrow
+
+	// Numpad
+	m[69] = 0x53 // NumLock
+	m[98] = 0x54 // KP /
+	m[55] = 0x55 // KP *
+	m[74] = 0x56 // KP -
+	m[78] = 0x57 // KP +
+	m[96] = 0x58 // KP Enter
+	m[79] = 0x59 // KP 1
+	m[80] = 0x5A // KP 2
+	m[81] = 0x5B // KP 3
+	m[75] = 0x5C // KP 4
+	m[76] = 0x5D // KP 5
+	m[77] = 0x5E // KP 6
+	m[71] = 0x5F // KP 7
+	m[72] = 0x60 // KP 8
+	m[73] = 0x61 // KP 9
+	m[82] = 0x62 // KP 0
+	m[83] = 0x63 // KP .
+
+	// Additional keys
+	m[99] = 0x46  // PrintScreen
+	m[70] = 0x47  // ScrollLock
+	m[119] = 0x48 // Pause
+	m[127] = 0x65 // Menu/Application
 
 	return m
 }

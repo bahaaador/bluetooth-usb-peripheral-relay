@@ -73,7 +73,7 @@ func processEvents(ctx context.Context, inputFile, outputFile *os.File, eventCon
 				continue
 			}
 
-			logger.DebugPrintf("Read event from %s: Type=%d, Code=%d, Value=%d\n",
+			logger.Printf("Read event from %s: Type=%d, Code=%d, Value=%d\n",
 				deviceName, event.Type, event.Code, event.Value)
 
 			if err := handleEvent(outputFile, event, eventConverter, deviceName); err != nil {
