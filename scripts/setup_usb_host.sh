@@ -1,22 +1,38 @@
 #!/bin/bash
+set -e
 
-# Backup config.txt
-sudo cp /boot/config.txt /boot/config.txt.bak
+# Raspberry Pi OS Bookworm+ and DietPi use /boot/firmware/config.txt; older images use /boot/config.txt
+if [[ -f /boot/firmware/config.txt ]]; then
+  CONFIG_TXT=/boot/firmware/config.txt
+else
+  CONFIG_TXT=/boot/config.txt
+fi
 
-# Enable dwc2 driver
-echo "dtoverlay=dwc2" | sudo tee -a /boot/config.txt
+echo "Using boot config: ${CONFIG_TXT}"
 
-# Backup modules
+sudo cp "${CONFIG_TXT}" "${CONFIG_TXT}.bak"
+
+append_line_if_absent() {
+  local line="$1"
+  if ! sudo grep -Fxq "$line" "${CONFIG_TXT}" 2>/dev/null; then
+    echo "$line" | sudo tee -a "${CONFIG_TXT}" > /dev/null
+  fi
+}
+
+append_line_if_absent "dtoverlay=dwc2"
+append_line_if_absent "dtoverlay=dwc2,dr_mode=peripheral"
+
 sudo cp /etc/modules /etc/modules.bak
 
-# Load dwc2 module
-echo "dwc2" | sudo tee -a /etc/modules
+append_module_if_absent() {
+  local mod="$1"
+  if [[ -f /etc/modules ]] && grep -Fix "^${mod}$" /etc/modules >/dev/null 2>&1; then
+    return 0
+  fi
+  echo "$mod" | sudo tee -a /etc/modules > /dev/null
+}
 
-# Load libcomposite module
-echo "libcomposite" | sudo tee -a /etc/modules
+append_module_if_absent "dwc2"
+append_module_if_absent "libcomposite"
 
-
-# Disable USB mass storage gadget
-echo "dtoverlay=dwc2,dr_mode=peripheral" | sudo tee -a /boot/config.txt
-
-echo "USB host setup complete. Please reboot for changes to take effect."
+echo "USB gadget mode setup complete. Updated ${CONFIG_TXT}. Please reboot for changes to take effect."

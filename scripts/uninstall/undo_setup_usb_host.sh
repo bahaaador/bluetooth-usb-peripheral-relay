@@ -1,7 +1,14 @@
 #!/bin/bash
+set -e
 
-# Restore config.txt
-sudo cp /boot/config.txt.bak /boot/config.txt
+if [[ -f /boot/firmware/config.txt ]]; then
+  CONFIG_TXT=/boot/firmware/config.txt
+else
+  CONFIG_TXT=/boot/config.txt
+fi
 
-# Remove dwc2 driver
-sudo sed -i '/dtoverlay=dwc2/d' /boot/config.txt
+if [[ -f "${CONFIG_TXT}.bak" ]]; then
+  sudo cp "${CONFIG_TXT}.bak" "${CONFIG_TXT}"
+fi
+
+sudo sed -i '/dtoverlay=dwc2/d' "${CONFIG_TXT}"
