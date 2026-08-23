@@ -34,5 +34,5 @@ append_module_if_absent() {
 
 append_module_if_absent "dwc2"
 append_module_if_absent "libcomposite"
-
-echo "USB gadget mode setup complete. Updated ${CONFIG_TXT}. Please reboot for changes to take effect."
+ 
+echo "USB gadget (peripheral) mode enabled: updated ${CONFIG_TXT} and /etc/modules. Reboot for changes to take effect."
