@@ -6,7 +6,7 @@ Use Bluetooth peripherals with Bluetooth-disabled computers.
 
 ![Bluetooth USB HID Relay Overview](./assets/bluetooth-usb-peripheral-relay-image.png)
 
-This project creates a Bluetooth USB HID relay using a Raspberry Pi Zero (or similar OTG-enabled single-board computer). It allows you to use Bluetooth keyboards and mice with computers that have Bluetooth disabled, by presenting the board as a composite USB HID device.
+This project creates a Bluetooth USB HID relay using a Raspberry Pi Zero (or similar single-board computer whose USB port can run in USB device/gadget mode toward your PC). It allows you to use Bluetooth keyboards and mice with computers that have Bluetooth disabled, by presenting the board as a composite USB HID device. The USB cable from the board to that computer must be data-capable (not charge-only), so the host can enumerate the gadget.
 
 ## Inspiration
 
@@ -25,12 +25,12 @@ graph TD
 - Presents itself as a composite USB HID device (keyboard and mouse) to the host computer
 - Works with Windows, Mac, and Linux computers
 - Automatically starts the relay service at boot
-- Configures the board as a USB OTG device
+- Configures the board as a USB gadget (composite HID) toward the host PC
 - Includes a script to help pair Bluetooth devices
 
 ## Components
 
-- Raspberry Pi Zero or other single-board computer capable of USB OTG
+- Raspberry Pi Zero or other SBC with a USB port wired for gadget mode to the host PC
 - DietPi or another lightweight Linux distribution
 - Bash scripts for setup and configuration
 - Go program for handling Bluetooth input and USB HID output
@@ -41,8 +41,9 @@ graph TD
 ### Hardware
 
 - **Tested on:** Raspberry Pi Zero W 2
-- **Should work on:** Any Single Board Computer (SBC) with USB OTG or USB host capabilities
-- **Key requirement:** Device must be able to act as a USB gadget
+- **Should work on:** SBCs where Linux can use a USB port as a gadget toward another machine (ordinary host-only Type-A ports are not enough without extra hardware).
+- **Requirements:** Data-capable cable to the host; kernel and controller support for configfs/libcomposite on that link.
+- **Which port:** Pi Zero / Zero 2 W: two micro-USB jacks—run the PC link on the one labeled USB (PWR is power-only for this). Other boards: use the connector documented for USB device or gadget mode.
 
 ### Software Prerequisites
 
@@ -95,14 +96,14 @@ While the setup process is generally safe, please proceed thoughtfully and feel 
 
 1. Log in to your Raspberry Pi Zero.
 2. Clone this repository to your board.
-3. Run the setup scripts in the following order:
+3. Run the setup scripts in order: `setup_usb_gadget.sh` enables peripheral USB at boot; reboot; then `setup_hid_composite.sh` defines the composite HID in configfs.
 
    ```bash
    sudo chmod +x scripts/*.sh # make sure all scripts are executable
-   sudo ./scripts/setup_usb_host.sh # enable the USB host and load the necessary modules
+   sudo ./scripts/setup_usb_gadget.sh # boot + modules: dwc2 peripheral mode, dwc2 and libcomposite
    sudo reboot
    sudo ./scripts/setup_bluetooth.sh # enable and start the bluetooth service
-   sudo ./scripts/setup_gadgets.sh # create the gadget and configure the USB strings
+   sudo ./scripts/setup_hid_composite.sh # configfs: composite HID gadget (USB strings, functions, UDC)
    ```
 
 4. Pair your Bluetooth devices manually or using the script:
@@ -119,7 +120,7 @@ While the setup process is generally safe, please proceed thoughtfully and feel 
 
 ## Usage
 
-Connect the board to the target computer via USB. This will turn the board on and start the service automatically (assuming it was installed and enabled using the steps above) the bluetooth peripherals should connect automatically as well and the service will retry if they are not connected momentarily. Both Windows and MacOS have been tested and should work.
+Plug the board into the PC with a data cable on the gadget port (Pi Zero: USB socket, not PWR; charge-only cables will not enumerate). On boot the installed service starts; paired Bluetooth devices should attach and the service retries if not. Windows and macOS have been tested.
 
 ## Tasks
 
@@ -177,11 +178,11 @@ To uninstall the service:
 task service:uninstall
 ```
 
-To remove the gadget and restore the USB host configuration:
+To remove the configfs HID gadget and restore the USB peripheral boot configuration:
 
 ```bash
-./scripts/uninstall/undo_setup_gadgets.sh
-./scripts/uninstall/undo_setup_usb_host.sh
+./scripts/uninstall/undo_setup_hid_composite.sh
+./scripts/uninstall/undo_setup_usb_gadget.sh
 ```
 
 ## Development
@@ -192,7 +193,7 @@ This project can be used as is or as basis for other types of USB gadgets. It ca
 - Creating USB gadgets
 - Using Go for hardware interfacing
 - Setting up systemd services
-- Configuring single-board computers as USB OTG devices
+- Configuring single-board computers as USB gadgets (device mode)
 - Bluetooth device pairing and management
 
 It's been a fun journey of discovery, and I hope others find it useful or inspiring for their own projects!
